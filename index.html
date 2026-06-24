@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Weather App |Khushi | Prodigy Infotech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  /*  reset & base  */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #0B1E3D;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: #EAEFF6;
+  }
+
+  
+  .app {
+    width: 100%;
+    max-width: 420px;
+    background: #102747;
+    border-radius: 24px;
+    overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.06);
+  }
+
+  /*  search  */
+  .search-zone {
+    padding: 20px 20px 0 20px;
+    position: relative;
+  }
+
+  .search-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .search-input {
+    flex: 1;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    padding: 12px 14px;
+    color: #EAEFF6;
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+  }
+
+  .search-input::placeholder { color: #7E8FA6; }
+
+  .search-input:focus {
+    border-color: #F4B860;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .locate-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.07);
+    color: #EAEFF6;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .locate-btn:hover { background: rgba(255,255,255,0.14); }
+  .locate-btn:active { transform: scale(0.95); }
+
+  .locate-btn svg { width: 20px; height: 20px; }
+
+  .locate-btn.loading svg {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  
+  .suggestions {
+    position: absolute;
+    top: 64px;
+    left: 20px;
+    right: 20px;
+    background: #16315A;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    z-index: 20;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+    display: none;
+  }
+
+  .suggestions.show { display: block; }
+
+  .suggestion-item {
+    padding: 11px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .suggestion-item:last-child { border-bottom: none; }
+  .suggestion-item:hover, .suggestion-item.active { background: rgba(244,184,96,0.12); }
+
+  .suggestion-name { color: #EAEFF6; font-weight: 500; }
+  .suggestion-region { color: #7E8FA6; font-size: 12px; white-space: nowrap; }
+
+  .suggestion-empty {
+    padding: 12px 14px;
+    color: #7E8FA6;
+    font-size: 13px;
+  }
+
+  /*  scene  */
+  .scene {
+    position: relative;
+    height: 220px;
+    margin: 18px 20px 0 20px;
+    border-radius: 16px;
+    overflow: hidden;
+    background: linear-gradient(180deg, #1A3B6B 0%, #0B1E3D 100%);
+    transition: background 0.6s ease;
+  }
+
+  .scene.sunny { background: linear-gradient(180deg, #2C5C8E 0%, #1A3B6B 100%); }
+  .scene.cloudy { background: linear-gradient(180deg, #344A63 0%, #1F2F44 100%); }
+  .scene.rainy { background: linear-gradient(180deg, #1C2E42 0%, #11202F 100%); }
+  .scene.night { background: linear-gradient(180deg, #0A1830 0%, #050D1C 100%); }
+
+  .scene-layer {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* sun */
+  .sun {
+    position: absolute;
+    top: 38px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #FFE3A0, #F4B860 70%);
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .scene.sunny .sun { opacity: 1; animation: sun-pulse 4s ease-in-out infinite; }
+
+  @keyframes sun-pulse {
+    0%, 100% { box-shadow: 0 0 30px 6px rgba(244,184,96,0.35); }
+    50% { box-shadow: 0 0 44px 12px rgba(244,184,96,0.55); }
+  }
+
+  .ray {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 3px;
+    height: 90px;
+    background: linear-gradient(to bottom, rgba(244,184,96,0.45), transparent);
+    transform-origin: top center;
+    border-radius: 4px;
+  }
+
+  .scene.sunny .ray { animation: ray-rotate 30s linear infinite; }
+
+  @keyframes ray-rotate {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* moon, for night */
+  .moon {
+    position: absolute;
+    top: 34px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #DCE4F0;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+    box-shadow: inset -12px -4px 0 0 #0A1830;
+  }
+
+  .scene.night .moon { opacity: 1; }
+
+  .star {
+    position: absolute;
+    width: 3px;
+    height: 3px;
+    background: #EAEFF6;
+    border-radius: 50%;
+    opacity: 0;
+  }
+
+  .scene.night .star { opacity: 0.8; animation: twinkle 2.4s ease-in-out infinite; }
+
+  @keyframes twinkle {
+    0%, 100% { opacity: 0.2; }
+    50% { opacity: 0.9; }
+  }
+
+ 
+  .cloud {
+    position: absolute;
+    background: #C9D3DF;
+    border-radius: 40px;
+    opacity: 0;
+    transition: opacity 0.6s ease;
+  }
+
+  .cloud::before, .cloud::after {
+    content: '';
+    position: absolute;
+    background: #C9D3DF;
+    border-radius: 50%;
+  }
+
+  .scene.cloudy .cloud, .scene.rainy .cloud { opacity: 1; }
+  .scene.rainy .cloud { background: #6E7E8F; }
+  .scene.rainy .cloud::before, .scene.rainy .cloud::after { background: #6E7E8F; }
+
+  .cloud-1 {
+    width: 110px; height: 34px; top: 50px; left: -20px;
+    animation: drift-right 18s linear infinite;
+  }
+  .cloud-1::before { width: 50px; height: 50px; top: -26px; left: 14px; }
+  .cloud-1::after { width: 40px; height: 40px; top: -18px; left: 56px; }
+
+  .cloud-2 {
+    width: 90px; height: 28px; top: 90px; left: 200px;
+    animation: drift-right 24s linear infinite;
+    animation-delay: -6s;
+  }
+  .cloud-2::before { width: 40px; height: 40px; top: -20px; left: 12px; }
+  .cloud-2::after { width: 32px; height: 32px; top: -14px; left: 46px; }
+
+  @keyframes drift-right {
+    from { transform: translateX(-140px); }
+    to   { transform: translateX(420px); }
+  }
+
+  /* rain */
+  .drop {
+    position: absolute;
+    width: 2px;
+    height: 16px;
+    background: linear-gradient(to bottom, transparent, #9DC4E0);
+    opacity: 0;
+    border-radius: 2px;
+  }
+
+  .scene.rainy .drop { opacity: 0.8; animation: fall 0.9s linear infinite; }
+
+  @keyframes fall {
+    from { transform: translateY(-20px); opacity: 0; }
+    10%  { opacity: 0.8; }
+    to   { transform: translateY(220px); opacity: 0.1; }
+  }
+
+  
+  .horizon {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30px;
+    background: linear-gradient(to top, rgba(0,0,0,0.25), transparent);
+  }
+
+  /*  readout  */
+  .readout {
+    padding: 18px 24px 24px 24px;
+    text-align: center;
+  }
+
+  .place-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #EAEFF6;
+    letter-spacing: 0.2px;
+  }
+
+  .place-sub {
+    font-size: 12px;
+    color: #7E8FA6;
+    margin-top: 2px;
+  }
+
+  .temp-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    margin-top: 6px;
+  }
+
+  .temp-value {
+    font-family: 'Fraunces', serif;
+    font-weight: 500;
+    font-size: 72px;
+    line-height: 1;
+    color: #EAEFF6;
+  }
+
+  .temp-unit {
+    font-family: 'Fraunces', serif;
+    font-size: 28px;
+    color: #9CB0C7;
+    margin-top: 8px;
+  }
+
+  .condition-text {
+    font-size: 15px;
+    color: #C7D4E3;
+    margin-top: 2px;
+  }
+
+  .stat-row {
+    display: flex;
+    justify-content: center;
+    gap: 22px;
+    margin-top: 18px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: #7E8FA6;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: #EAEFF6;
+    margin-top: 3px;
+  }
+
+  /*  states  */
+  .state-msg {
+    padding: 40px 24px;
+    text-align: center;
+    color: #9CB0C7;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  .state-msg.error { color: #E8A77A; }
+
+  .hidden { display: none !important; }
+
+ 
+  .footer-credit {
+    text-align: center;
+    font-size: 11px;
+    color: #4D6080;
+    padding: 0 20px 18px 20px;
+    letter-spacing: 0.3px;
+  }
+
+  @media (max-width: 380px) {
+    .temp-value { font-size: 60px; }
+    .stat-row { gap: 14px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <div class="search-zone">
+    <div class="search-row">
+      <input
+        type="text"
+        id="cityInput"
+        class="search-input"
+        placeholder="Search a city..."
+        autocomplete="off"
+      >
+      <button class="locate-btn" id="locateBtn" title="Use current location">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+
+  <div id="scene" class="scene">
+    <div class="scene-layer">
+      <div class="sun" id="sun"></div>
+      <div class="ray" style="transform: rotate(0deg)"></div>
+      <div class="ray" style="transform: rotate(90deg)"></div>
+      <div class="ray" style="transform: rotate(180deg)"></div>
+      <div class="ray" style="transform: rotate(270deg)"></div>
+
+      <div class="moon"></div>
+      <div class="star" style="top: 20px; left: 40px;"></div>
+      <div class="star" style="top: 60px; left: 90px; animation-delay: -0.8s;"></div>
+      <div class="star" style="top: 30px; left: 280px; animation-delay: -1.4s;"></div>
+      <div class="star" style="top: 70px; left: 240px; animation-delay: -0.4s;"></div>
+      <div class="star" style="top: 100px; left: 320px; animation-delay: -1.8s;"></div>
+
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+
+      <div id="rainLayer"></div>
+    </div>
+    <div class="horizon"></div>
+  </div>
+
+  <div id="readout" class="readout hidden">
+    <div class="place-name" id="placeName">—</div>
+    <div class="place-sub" id="placeSub">—</div>
+    <div class="temp-row">
+      <span class="temp-value" id="tempValue">--</span>
+      <span class="temp-unit">°C</span>
+    </div>
+    <div class="condition-text" id="conditionText">—</div>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Feels like</div>
+        <div class="stat-value" id="statFeels">--°</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Humidity</div>
+        <div class="stat-value" id="statHumidity">--%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Wind</div>
+        <div class="stat-value" id="statWind">-- km/h</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stateMsg" class="state-msg">
+    Search for a city above, or tap the target icon to use your current location.
+  </div>
+
+  <div class="footer-credit">Made with ☕ by Khushi · Prodigy Infotech Task 05</div>
+
+</div>
+
+<script>
+  
+
+  // elements 
+  const cityInput   = document.getElementById('cityInput');
+  const suggestBox  = document.getElementById('suggestions');
+  const locateBtn   = document.getElementById('locateBtn');
+  const scene       = document.getElementById('scene');
+  const rainLayer   = document.getElementById('rainLayer');
+  const readout     = document.getElementById('readout');
+  const stateMsg    = document.getElementById('stateMsg');
+
+  let debounceTimer = null;
+  let activeSuggestionIndex = -1;
+  let currentSuggestions = [];
+
+ 
+  for (let i = 0; i < 26; i++) {
+    const drop = document.createElement('div');
+    drop.className = 'drop';
+    drop.style.left = (Math.random() * 100) + '%';
+    drop.style.animationDelay = (Math.random() * 0.9) + 's';
+    drop.style.height = (10 + Math.random() * 10) + 'px';
+    rainLayer.appendChild(drop);
+  }
+
+
+  cityInput.addEventListener('input', () => {
+    const query = cityInput.value.trim();
+    activeSuggestionIndex = -1;
+
+    if (debounceTimer) clearTimeout(debounceTimer);
+
+    if (query.length === 0) {
+      hideSuggestions();
+      return;
+    }
+
+  
+    debounceTimer = setTimeout(() => searchCities(query), 250);
+  });
+
+  cityInput.addEventListener('keydown', (e) => {
+    if (!suggestBox.classList.contains('show')) return;
+    const items = suggestBox.querySelectorAll('.suggestion-item');
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      activeSuggestionIndex = Math.min(activeSuggestionIndex + 1, items.length - 1);
+      highlightActive(items);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      activeSuggestionIndex = Math.max(activeSuggestionIndex - 1, 0);
+      highlightActive(items);
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggestionIndex >= 0 && currentSuggestions[activeSuggestionIndex]) {
+        pickCity(currentSuggestions[activeSuggestionIndex]);
+      } else if (currentSuggestions[0]) {
+        pickCity(currentSuggestions[0]);
+      }
+    } else if (e.key === 'Escape') {
+      hideSuggestions();
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!suggestBox.contains(e.target) && e.target !== cityInput) {
+      hideSuggestions();
+    }
+  });
+
+  function highlightActive(items) {
+    items.forEach((item, i) => item.classList.toggle('active', i === activeSuggestionIndex));
+  }
+
+
+  const INDIAN_CITIES = [
+    ['Mumbai','Maharashtra',19.0760,72.8777,12442373],
+    ['Delhi','Delhi',28.7041,77.1025,11034555],
+    ['Bengaluru','Karnataka',12.9716,77.5946,8443675],
+    ['Hyderabad','Telangana',17.3850,78.4867,6993262],
+    ['Ahmedabad','Gujarat',23.0225,72.5714,5570585],
+    ['Chennai','Tamil Nadu',13.0827,80.2707,4646732],
+    ['Kolkata','West Bengal',22.5726,88.3639,4496694],
+    ['Surat','Gujarat',21.1702,72.8311,4467797],
+    ['Pune','Maharashtra',18.5204,73.8567,3124458],
+    ['Jaipur','Rajasthan',26.9124,75.7873,3046163],
+    ['Lucknow','Uttar Pradesh',26.8467,80.9462,2817105],
+    ['Kanpur','Uttar Pradesh',26.4499,80.3319,2767031],
+    ['Nagpur','Maharashtra',21.1458,79.0882,2405421],
+    ['Indore','Madhya Pradesh',22.7196,75.8577,1994397],
+    ['Thane','Maharashtra',19.2183,72.9781,1841488],
+    ['Bhopal','Madhya Pradesh',23.2599,77.4126,1798218],
+    ['Visakhapatnam','Andhra Pradesh',17.6868,83.2185,1730320],
+    ['Pimpri-Chinchwad','Maharashtra',18.6298,73.7997,1727692],
+    ['Patna','Bihar',25.5941,85.1376,1684222],
+    ['Vadodara','Gujarat',22.3072,73.1812,1666703],
+    ['Ghaziabad','Uttar Pradesh',28.6692,77.4538,1648643],
+    ['Ludhiana','Punjab',30.9010,75.8573,1618879],
+    ['Agra','Uttar Pradesh',27.1767,78.0081,1585704],
+    ['Nashik','Maharashtra',19.9975,73.7898,1486973],
+    ['Faridabad','Haryana',28.4089,77.3178,1414050],
+    ['Meerut','Uttar Pradesh',28.9845,77.7064,1305429],
+    ['Rajkot','Gujarat',22.3039,70.8022,1286995],
+    ['Kalyan-Dombivli','Maharashtra',19.2403,73.1305,1246381],
+    ['Vasai-Virar','Maharashtra',19.4259,72.8225,1221233],
+    ['Varanasi','Uttar Pradesh',25.3176,82.9739,1198491],
+    ['Srinagar','Jammu and Kashmir',34.0837,74.7973,1192792],
+    ['Aurangabad','Maharashtra',19.8762,75.3433,1175116],
+    ['Dhanbad','Jharkhand',23.7957,86.4304,1162472],
+    ['Amritsar','Punjab',31.6340,74.8723,1132761],
+    ['Navi Mumbai','Maharashtra',19.0330,73.0297,1119477],
+    ['Allahabad','Uttar Pradesh',25.4358,81.8463,1117094],
+    ['Ranchi','Jharkhand',23.3441,85.3096,1073427],
+    ['Howrah','West Bengal',22.5958,88.2636,1072161],
+    ['Coimbatore','Tamil Nadu',11.0168,76.9558,1061447],
+    ['Jabalpur','Madhya Pradesh',23.1815,79.9864,1055525],
+    ['Gwalior','Madhya Pradesh',26.2183,78.1828,1054420],
+    ['Vijayawada','Andhra Pradesh',16.5062,80.6480,1048240],
+    ['Jodhpur','Rajasthan',26.2389,73.0243,1033918],
+    ['Madurai','Tamil Nadu',9.9252,78.1198,1017865],
+    ['Raipur','Chhattisgarh',21.2514,81.6296,1010087],
+    ['Kota','Rajasthan',25.2138,75.8648,1001365],
+    ['Chandigarh','Chandigarh',30.7333,76.7794,960787],
+    ['Guwahati','Assam',26.1445,91.7362,957352],
+    ['Solapur','Maharashtra',17.6599,75.9064,951558],
+    ['Hubli-Dharwad','Karnataka',15.3647,75.1240,943857],
+    ['Mysore','Karnataka',12.2958,76.6394,920550],
+    ['Tiruchirappalli','Tamil Nadu',10.7905,78.7047,916857],
+    ['Bareilly','Uttar Pradesh',28.3670,79.4304,903668],
+    ['Aligarh','Uttar Pradesh',27.8974,78.0880,874408],
+    ['Tiruppur','Tamil Nadu',11.1085,77.3411,877778],
+    ['Moradabad','Uttar Pradesh',28.8389,78.7768,889810],
+    ['Jalandhar','Punjab',31.3260,75.5762,873725],
+    ['Bhubaneswar','Odisha',20.2961,85.8245,837737],
+    ['Salem','Tamil Nadu',11.6643,78.1460,831038],
+    ['Warangal','Telangana',17.9689,79.5941,811844],
+    ['Guntur','Andhra Pradesh',16.3067,80.4365,743354],
+    ['Bhiwandi','Maharashtra',19.3002,73.0629,709012],
+    ['Saharanpur','Uttar Pradesh',29.9680,77.5460,705478],
+    ['Gorakhpur','Uttar Pradesh',26.7606,83.3732,673446],
+    ['Bikaner','Rajasthan',28.0229,73.3119,647804],
+    ['Amravati','Maharashtra',20.9374,77.7796,647057],
+    ['Noida','Uttar Pradesh',28.5355,77.3910,642381],
+    ['Jamshedpur','Jharkhand',22.8046,86.2029,629659],
+    ['Bhilai','Chhattisgarh',21.1938,81.3509,625697],
+    ['Cuttack','Odisha',20.4625,85.8830,606007],
+    ['Kochi','Kerala',9.9312,76.2673,601574],
+    ['Bhavnagar','Gujarat',21.7645,72.1519,605882],
+    ['Dehradun','Uttarakhand',30.3165,78.0322,578420],
+    ['Durgapur','West Bengal',23.5204,87.3119,581409],
+    ['Asansol','West Bengal',23.6739,86.9524,564491],
+    ['Nanded','Maharashtra',19.1383,77.3210,550564],
+    ['Kolhapur','Maharashtra',16.7050,74.2433,549236],
+    ['Ajmer','Rajasthan',26.4499,74.6399,542580],
+    ['Gulbarga','Karnataka',17.3297,76.8343,543147],
+    ['Jamnagar','Gujarat',22.4707,70.0577,529308],
+    ['Ujjain','Madhya Pradesh',23.1765,75.7885,515215],
+    ['Siliguri','West Bengal',26.7271,88.3953,513264],
+    ['Jhansi','Uttar Pradesh',25.4484,78.5685,507100],
+    ['Thiruvananthapuram','Kerala',8.5241,76.9366,460468],
+    ['Shimla','Himachal Pradesh',31.1048,77.1734,169578],
+    ['Panaji','Goa',15.4909,73.8278,114759],
+    ['Puducherry','Puducherry',11.9416,79.8083,244377],
+    ['Gandhinagar','Gujarat',23.2156,72.6369,292797],
+    ['Itanagar','Arunachal Pradesh',27.0844,93.6053,59490],
+    ['Imphal','Manipur',24.8170,93.9368,264986],
+    ['Shillong','Meghalaya',25.5788,91.8933,143229],
+    ['Aizawl','Mizoram',23.7271,92.7176,293416],
+    ['Kohima','Nagaland',25.6751,94.1086,99039],
+    ['Agartala','Tripura',23.8315,91.2868,522613]
+  ].map(([name, admin1, latitude, longitude, population]) => ({
+    name, admin1, country: 'India', country_code: 'IN', latitude, longitude, population
+  }));
+
+
+ 
+  function searchLocalIndianCities(query) {
+    const q = query.trim().toLowerCase();
+    if (q.length === 0) return [];
+    return INDIAN_CITIES.filter((city) => city.name.toLowerCase().startsWith(q));
+  }
+
+  async function searchCities(query) {
+    const localMatches = searchLocalIndianCities(query);
+
+    try {
+  
+      const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=15&language=en&format=json`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      const apiResults = data.results || [];
+      const merged = mergeResults(localMatches, apiResults);
+      currentSuggestions = rankIndiaFirst(merged).slice(0, 8);
+      renderSuggestions(currentSuggestions);
+    } catch (err) {
+      // API call failed (offline, blocked, rate limited) — fall back to
+      // l
