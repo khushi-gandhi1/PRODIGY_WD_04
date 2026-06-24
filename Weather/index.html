@@ -1,1 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Weather App |Khushi | Prodigy Infotech</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
 
+<div class="app">
+
+  <div class="search-zone">
+    <div class="search-row">
+      <input
+        type="text"
+        id="cityInput"
+        class="search-input"
+        placeholder="Search a city..."
+        autocomplete="off"
+      >
+      <button class="locate-btn" id="locateBtn" title="Use current location">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="suggestions" id="suggestions"></div>
+  </div>
+
+  <div id="scene" class="scene">
+    <div class="scene-layer">
+      <div class="sun" id="sun"></div>
+      <div class="ray" style="transform: rotate(0deg)"></div>
+      <div class="ray" style="transform: rotate(90deg)"></div>
+      <div class="ray" style="transform: rotate(180deg)"></div>
+      <div class="ray" style="transform: rotate(270deg)"></div>
+
+      <div class="moon"></div>
+      <div class="star" style="top: 20px; left: 40px;"></div>
+      <div class="star" style="top: 60px; left: 90px; animation-delay: -0.8s;"></div>
+      <div class="star" style="top: 30px; left: 280px; animation-delay: -1.4s;"></div>
+      <div class="star" style="top: 70px; left: 240px; animation-delay: -0.4s;"></div>
+      <div class="star" style="top: 100px; left: 320px; animation-delay: -1.8s;"></div>
+
+      <div class="cloud cloud-1"></div>
+      <div class="cloud cloud-2"></div>
+
+      <div id="rainLayer"></div>
+    </div>
+    <div class="horizon"></div>
+  </div>
+
+  <div id="readout" class="readout hidden">
+    <div class="place-name" id="placeName">—</div>
+    <div class="place-sub" id="placeSub">—</div>
+    <div class="temp-row">
+      <span class="temp-value" id="tempValue">--</span>
+      <span class="temp-unit">°C</span>
+    </div>
+    <div class="condition-text" id="conditionText">—</div>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-label">Feels like</div>
+        <div class="stat-value" id="statFeels">--°</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Humidity</div>
+        <div class="stat-value" id="statHumidity">--%</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Wind</div>
+        <div class="stat-value" id="statWind">-- km/h</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="stateMsg" class="state-msg">
+    Search for a city above, or tap the target icon to use your current location.
+  </div>
+
+  <div class="footer-credit">Made with ☕ by Khushi · Prodigy Infotech Task 05</div>
+
+</div>
+
+<script src="script.js"></script>
+
+
+</body>
+        </html>
+        
